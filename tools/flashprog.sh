@@ -12,12 +12,14 @@ fi
 if [[ -z $2 ]]
 then
     TARGET=SPI # default target
+elif [ $2 == RAM ]
+then
+    ${DOWNLOAD_FX3} -t RAM -i $1 && exit 0
 else
     TARGET=$2
 fi
 
 FOUND=$(lsusb | grep 04b4:00f3 | wc -l)
-echo ${FOUND}
 if [[ ${FOUND} == 1 ]]
 then
     echo "USB boot succeed!"
