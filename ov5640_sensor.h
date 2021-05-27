@@ -15,24 +15,32 @@
 
 #define SENSOR_RESET_GPIO 22
 
-#define AE_MODE_MIN         0x01
-#define AE_MODE_MAX         0x02
-#define AE_MODE_RES         0x03  // return bitmap of the modes supported by this control
-#define AE_MODE_DEF         0x02  // Auto Mode 
+// Processing Unit
+#define PU_GAIN_MIN             1             
+#define PU_GAIN_MAX             64
+#define PU_GAIN_RES             1
+#define PU_GAIN_DEF             16
 
-#define EXP_ABS_MIN         1
-#define EXP_ABS_MAX         0x0ffff0
-#define EXP_ABS_RES         1
-#define EXP_ABS_DEF         1000
+// Camera Terminal
+#define CT_AE_MODE_RES         0x03  // return bitmap of the modes supported by this control
+#define CT_AE_MODE_DEF         0x00  // Auto Mode
+
+#define CT_EXP_ABS_MIN         1
+#define CT_EXP_ABS_MAX         0x0ffff0
+#define CT_EXP_ABS_RES         1
+#define CT_EXP_ABS_DEF         1000
 
 // Register
 #define CHIP_ID_HIGHT_BYTE  0x300A
 #define CHIP_ID_LOW_BYTE    0x300B
 
 #define AEC_PK_MANUAL       0x3503
-#define AEC_PK_EXPOSURE0    0x3500
+#define AEC_PK_EXPOSURE0    0x3500  // MSB
 #define AEC_PK_EXPOSURE1    0x3501
 #define AEC_PK_EXPOSURE2    0x3502
+
+#define AEC_PK_REAL_GAIN0   0x350A  // MSB
+#define AEC_PK_REAL_GAIN1   0x350B 
 
 void ov5640_init();
 void ov5640_reset();

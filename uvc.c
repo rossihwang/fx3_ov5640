@@ -1221,62 +1221,62 @@ static void
 UVCHandleProcessingUnitRqts (
         void)
 {
-    // CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
-    // uint16_t readCount, brightnessVal;
+    CyU3PReturnStatus_t status = CY_U3P_SUCCESS;
+    uint16_t readCount, gain;
 
     switch (wValue)
     {
-        // case CY_FX_UVC_PU_BRIGHTNESS_CONTROL:
-        //     switch (bRequest)
-        //     {
-        //         case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of brightness data = 2 byte. */
-        //             glEp0Buffer[0] = 2;
-        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-        //             break;
-        //         case CY_FX_USB_UVC_GET_CUR_REQ: /* Current brightness value. */
-        //             glEp0Buffer[0] = SensorGetBrightness ();
-        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-        //             break;
-        //         case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum brightness = 0. */
-        //             glEp0Buffer[0] = 0;
-        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-        //             break;
-        //         case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum brightness = 255. */
-        //             glEp0Buffer[0] = 255;
-        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-        //             break;
-        //         case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
-        //             glEp0Buffer[0] = 1;
-        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-        //             break;
-        //         case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
-        //             glEp0Buffer[0] = 3;
-        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-        //             break;
-        //         case CY_FX_USB_UVC_GET_DEF_REQ: /* Default brightness value = 55. */
-        //             glEp0Buffer[0] = 55;
-        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-        //             break;
-        //         case CY_FX_USB_UVC_SET_CUR_REQ: /* Update brightness value. */
-        //             apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
-        //                     glEp0Buffer, &readCount);
-        //             if (apiRetStatus == CY_U3P_SUCCESS)
-        //             {
-        //                 brightnessVal = CY_U3P_MAKEWORD(glEp0Buffer[1], glEp0Buffer[0]);
-        //                 /* Update the brightness value only if the value is within the range */
-        //                 if(brightnessVal >= 0 && brightnessVal <= 255)
-        //                 {
-        //                     SensorSetBrightness (glEp0Buffer[0]);
-        //                 }
-        //             }
-        //             break;
-        //         default:
-        //             glUvcVcErrorCode = CY_FX_UVC_VC_ERROR_CODE_INVALID_REQUEST;
-        //             CyU3PUsbStall (0, CyTrue, CyFalse);
-        //             break;
-        //     }
-        //     break;
-
+        case CY_FX_UVC_PU_GAIN_CONTROL:
+            switch (bRequest)
+            {
+                case CY_FX_USB_UVC_GET_LEN_REQ:
+                    glEp0Buffer[0] = 2;
+                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+                    break;
+                case CY_FX_USB_UVC_GET_CUR_REQ: 
+                    glEp0Buffer[0] = ov5640_read_byte(AEC_PK_REAL_GAIN1);  // LSB
+                    glEp0Buffer[1] = ov5640_read_byte(AEC_PK_REAL_GAIN0);
+                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+                    break;
+                case CY_FX_USB_UVC_GET_MIN_REQ:
+                    glEp0Buffer[0] = PU_GAIN_MIN;
+                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+                    break;
+                case CY_FX_USB_UVC_GET_MAX_REQ:
+                    glEp0Buffer[0] = PU_GAIN_MAX;
+                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+                    break;
+                case CY_FX_USB_UVC_GET_RES_REQ:
+                    glEp0Buffer[0] = PU_GAIN_RES;
+                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+                    break;
+                case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
+                    glEp0Buffer[0] = 3;
+                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+                    break;
+                case CY_FX_USB_UVC_GET_DEF_REQ:
+                    glEp0Buffer[0] = PU_GAIN_DEF;
+                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+                    break;
+                case CY_FX_USB_UVC_SET_CUR_REQ:
+                    status = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
+                            glEp0Buffer, &readCount);
+                    if (status == CY_U3P_SUCCESS)
+                    {
+                        gain = CY_U3P_MAKEWORD(glEp0Buffer[1], glEp0Buffer[0]);
+                        if(PU_GAIN_MIN <= gain && gain <= PU_GAIN_MAX)
+                        {
+                            ov5640_write_byte(AEC_PK_REAL_GAIN1, (uint8_t)gain);
+                            ov5640_write_byte(AEC_PK_REAL_GAIN0, 0);
+                        }
+                    }
+                    break;
+                default:
+                    glUvcVcErrorCode = CY_FX_UVC_VC_ERROR_CODE_INVALID_REQUEST;
+                    CyU3PUsbStall (0, CyTrue, CyFalse);
+                    break;
+            }
+            break;
         default:
             /*
              * Only the brightness control is supported as of now. Add additional code here to support
@@ -1445,31 +1445,23 @@ UVCHandleCameraTerminalRqts (
                     }
                     sendData = CyTrue;
                     break;
-                case CY_FX_USB_UVC_GET_MIN_REQ:
-                    autoExpMode = AE_MODE_MIN;
-                    sendData = CyTrue;
-                    break;
-                case CY_FX_USB_UVC_GET_MAX_REQ:
-                    autoExpMode = AE_MODE_MAX;
-                    sendData = CyTrue;
-                    break;
                 case CY_FX_USB_UVC_GET_RES_REQ:
-                    autoExpMode = AE_MODE_RES;
+                    autoExpMode = CT_AE_MODE_RES;
                     sendData = CyTrue;
                     break;
                 case CY_FX_USB_UVC_GET_DEF_REQ:
-                    autoExpMode = AE_MODE_DEF;
+                    autoExpMode = CT_AE_MODE_DEF;
                     sendData = CyTrue;
                     break;
                 case CY_FX_USB_UVC_SET_CUR_REQ:
                     apiRetStatus = CyU3PUsbGetEP0Data(CY_FX_UVC_MAX_PROBE_SETTING, glEp0Buffer, &readCount);
                     if (apiRetStatus == CY_U3P_SUCCESS) {
-                        if (glEp0Buffer[0] & 0x01) {
+                        if (glEp0Buffer[0] & 0x03) {  // manual mode(exposure/gain)
                             data = ov5640_read_byte(AEC_PK_MANUAL);
                             ov5640_write_byte(AEC_PK_MANUAL, data | 0x01);
-                        } else if (glEp0Buffer[0] & 0x02) {
+                        } else if (glEp0Buffer[0] & 0x02) {  // auto mode(exposure/gain)
                             data = ov5640_read_byte(AEC_PK_MANUAL);
-                            ov5640_write_byte(AEC_PK_MANUAL, data & 0xfe);
+                            ov5640_write_byte(AEC_PK_MANUAL, data & 0xfc);
                         }
                     }
                     break;
@@ -1499,19 +1491,19 @@ UVCHandleCameraTerminalRqts (
                     sendData = CyTrue;
                     break;
                 case CY_FX_USB_UVC_GET_MIN_REQ:
-                    exposureAbs = EXP_ABS_MIN;
+                    exposureAbs = CT_EXP_ABS_MIN;
                     sendData = CyTrue;
                     break;
                 case CY_FX_USB_UVC_GET_MAX_REQ:
-                    exposureAbs = EXP_ABS_MAX;
+                    exposureAbs = CT_EXP_ABS_MAX;
                     sendData = CyTrue;
                     break;
                 case CY_FX_USB_UVC_GET_RES_REQ:
-                    exposureAbs = EXP_ABS_RES;
+                    exposureAbs = CT_EXP_ABS_RES;
                     sendData = CyTrue;
                     break;
                 case CY_FX_USB_UVC_GET_DEF_REQ:
-                    exposureAbs = EXP_ABS_DEF;
+                    exposureAbs = CT_EXP_ABS_DEF;
                     sendData = CyTrue;
                     break;
                 case CY_FX_USB_UVC_SET_CUR_REQ:

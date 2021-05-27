@@ -512,7 +512,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
 #ifdef UVC_PTZ_SUPPORT
         0x00,0x0A,0x00,                 /* bmControls field of camera terminal: PTZ supported */
 #else
-        0x0A,0x00,0x00,                 /* bmControls field of camera terminal: No controls supported */
+        0x0A,0x00,0x00,                 /* bmControls field of camera terminal */
 #endif
 
         /* Processing Unit Descriptor */
@@ -523,7 +523,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x01,                           /* Source ID : 1 : Conencted to input terminal */
         0x00,0x40,                      /* Digital multiplier */
         0x03,                           /* Size of controls field for this terminal : 3 bytes */
-        0x00,0x00,0x00,                 /* bmControls field of processing unit: Brightness control supported */
+        0x00,0x02,0x00,                 /* bmControls field of processing unit: gain supported */
         0x00,                           /* String desc index : Not used */
 
         /* Extension Unit Descriptor */
@@ -550,7 +550,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
                                          * D6: White Balance Temperature
                                          * D7: White Balance Component
                                          * D8: Backlight Compensation
-                                         * D9: Gain
+                                         * D9: Gain                          Y
                                          * D10: Power Line Frequency
                                          * D11: Hue, Auto
                                          * D12: White Balance Temperature, Auto
