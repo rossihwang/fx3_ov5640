@@ -190,7 +190,7 @@ const uint8_t CyFxUSBHSConfigDscr[] =
                                          * D19: Focus, Simple
                                          * D20: Window
                                          * D21: Region of Interest
-                                         * D22 – D23: Reserved, set to zero
+                                         * D22 ï¿½ D23: Reserved, set to zero
                                          */
 #ifdef UVC_PTZ_SUPPORT
         0x00,0x0A,0x00,                 /* bmControls field of camera terminal: PTZ supported */
@@ -227,7 +227,7 @@ const uint8_t CyFxUSBHSConfigDscr[] =
                                          * D16: Analog Video Standard
                                          * D17: Analog Video Lock Status
                                          * D18: Contrast, Auto
-                                         * D19 – D23: Reserved. Set to zero.
+                                         * D19 ï¿½ D23: Reserved. Set to zero.
                                          */
         0x01,0x00,0x00,                 /* bmControls field of processing unit: Brightness control supported */
         0x00,                           /* String desc index : Not used */
@@ -486,9 +486,9 @@ const uint8_t CyFxUSBSSConfigDscr[] =
                                         /* A bit set to 1 in the bmControls field indicates that
                                          * the mentioned Control is supported for the video stream.
                                          * D0: Scanning Mode
-                                         * D1: Auto-Exposure Mode
+                                         * D1: Auto-Exposure Mode        Y
                                          * D2: Auto-Exposure Priority
-                                         * D3: Exposure Time (Absolute)
+                                         * D3: Exposure Time (Absolute)  Y
                                          * D4: Exposure Time (Relative)
                                          * D5: Focus (Absolute)
                                          * D6: Focus (Relative)
@@ -507,12 +507,12 @@ const uint8_t CyFxUSBSSConfigDscr[] =
                                          * D19: Focus, Simple
                                          * D20: Window
                                          * D21: Region of Interest
-                                         * D22 – D23: Reserved, set to zero
+                                         * D22 ï¿½ D23: Reserved, set to zero
                                          */
 #ifdef UVC_PTZ_SUPPORT
         0x00,0x0A,0x00,                 /* bmControls field of camera terminal: PTZ supported */
 #else
-        0x00,0x00,0x00,                 /* bmControls field of camera terminal: No controls supported */
+        0x0A,0x00,0x00,                 /* bmControls field of camera terminal: No controls supported */
 #endif
 
         /* Processing Unit Descriptor */
@@ -523,7 +523,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x01,                           /* Source ID : 1 : Conencted to input terminal */
         0x00,0x40,                      /* Digital multiplier */
         0x03,                           /* Size of controls field for this terminal : 3 bytes */
-        0x01,0x00,0x00,                 /* bmControls field of processing unit: Brightness control supported */
+        0x00,0x00,0x00,                 /* bmControls field of processing unit: Brightness control supported */
         0x00,                           /* String desc index : Not used */
 
         /* Extension Unit Descriptor */
@@ -560,7 +560,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
                                          * D16: Analog Video Standard
                                          * D17: Analog Video Lock Status
                                          * D18: Contrast, Auto
-                                         * D19 – D23: Reserved. Set to zero.
+                                         * D19 ï¿½ D23: Reserved. Set to zero.
                                          */
         0x00,0x00,0x00,                 /* No controls supported */
         0x00,                           /* String desc index : Not used */

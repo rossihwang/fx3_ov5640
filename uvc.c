@@ -65,9 +65,10 @@
 #include <cyu3pib.h>
 #include <cyu3utils.h>
 #include <cyu3socket.h>
+#include <cyu3types.h>
 
 #include "uvc.h"
-#include "sensor.h"
+#include "ov5640_sensor.h"
 #include "camera_ptzcontrol.h"
 #include "cyfxgpif2config.h"
 
@@ -76,7 +77,7 @@
  *************************************************************************************************/
 static CyU3PThread   uvcAppThread;                      /* UVC video streaming thread. */
 static CyU3PThread   uvcAppEP0Thread;                   /* UVC control request handling thread. */
-static CyU3PEvent    glFxUVCEvent;                      /* Event group used to signal threads. ÓÃÓÚÏòÏß³Ì·¢³öÐÅºÅµÄÊÂ¼þ×é¡£ */
+static CyU3PEvent    glFxUVCEvent;                      /* Event group used to signal threads. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì·ï¿½ï¿½ï¿½ï¿½ÅºÅµï¿½ï¿½Â¼ï¿½ï¿½é¡£ */
 CyU3PDmaMultiChannel glChHandleUVCStream;               /* DMA multi-channel handle. */
 
 /* Current UVC control request fields. See USB specification for definition. */
@@ -711,7 +712,7 @@ CyFxUVCApplnInit (void)
     CyU3PDmaChannelConfig_t channelConfig;
 #endif
 
-    /* Create UVC event group ´´½¨UVCÊÂ¼þ×é*/
+    /* Create UVC event group ï¿½ï¿½ï¿½ï¿½UVCï¿½Â¼ï¿½ï¿½ï¿½*/
     apiRetStatus = CyU3PEventCreate (&glFxUVCEvent);
     if (apiRetStatus != 0)
     {
@@ -730,7 +731,7 @@ CyFxUVCApplnInit (void)
     gpioClock.clkSrc     = CY_U3P_SYS_CLK;
     gpioClock.halfDiv    = 0;
 
-    /* Initialize Gpio interface ³õÊ¼»¯GPIO½Ó¿Ú*/
+    /* Initialize Gpio interface ï¿½ï¿½Ê¼ï¿½ï¿½GPIOï¿½Ó¿ï¿½*/
     apiRetStatus = CyU3PGpioInit (&gpioClock, NULL);
     if (apiRetStatus != 0)
     {
@@ -738,8 +739,8 @@ CyFxUVCApplnInit (void)
         CyFxAppErrorHandler (apiRetStatus);
     }
 
-    /* CTL pins are restricted and cannot be configured using I/O matrix configuration function,CTLÒý½ÅÊÜµ½ÏÞÖÆ£¬²»ÄÜÊ¹ÓÃI/O¾ØÕóÅäÖÃ¹¦ÄÜ½øÐÐÅäÖÃ£¬
-     * must use GpioOverride to configure it ±ØÐëÊ¹ÓÃGpioOverrideÀ´ÅäÖÃËü*/
+    /* CTL pins are restricted and cannot be configured using I/O matrix configuration function,CTLï¿½ï¿½ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½I/Oï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½Ü½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
+     * must use GpioOverride to configure it ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½GpioOverrideï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
     apiRetStatus = CyU3PDeviceGpioOverride (SENSOR_RESET_GPIO, CyTrue);
     if (apiRetStatus != 0)
     {
@@ -747,7 +748,7 @@ CyFxUVCApplnInit (void)
         CyFxAppErrorHandler (apiRetStatus);
     }
 
-    /* SENSOR_RESET_GPIO is the Sensor reset pin  SENSOR_RESET_GPIOÊÇÕâ¸öSensorµÄ¸´Î»Òý½Å*/
+    /* SENSOR_RESET_GPIO is the Sensor reset pin  SENSOR_RESET_GPIOï¿½ï¿½ï¿½ï¿½ï¿½Sensorï¿½Ä¸ï¿½Î»ï¿½ï¿½ï¿½ï¿½*/
     gpioConfig.outValue    = CyTrue;
     gpioConfig.driveLowEn  = CyTrue;
     gpioConfig.driveHighEn = CyTrue;
@@ -760,25 +761,25 @@ CyFxUVCApplnInit (void)
         CyFxAppErrorHandler (apiRetStatus);
     }
 
-    /* Initialize the P-port. ³õÊ¼»¯Õâ¸ö¶Ë¿Ú*/
+    /* Initialize the P-port. ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¿ï¿½*/
     pibclock.clkDiv      = 2;
     pibclock.clkSrc      = CY_U3P_SYS_CLK;
     pibclock.isDllEnable = CyFalse;
     pibclock.isHalfDiv   = CyFalse;
 
-    apiRetStatus = CyU3PPibInit (CyTrue, &pibclock);//ÉèÖÃÊ±ÖÓ
+    apiRetStatus = CyU3PPibInit (CyTrue, &pibclock);//ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
     if (apiRetStatus != CY_U3P_SUCCESS)
     {
         CyU3PDebugPrint (4, "PIB Function Failed to Start, Error Code = %d\n", apiRetStatus);
         CyFxAppErrorHandler (apiRetStatus);
     }
 
-    CyFxUvcAppGpifInit ();//³õÊ¼»¯GPIF½Ó¿Ú
+    CyFxUvcAppGpifInit ();//ï¿½ï¿½Ê¼ï¿½ï¿½GPIFï¿½Ó¿ï¿½
 
-    /* Register the GPIF State Machine callback used to get frame end notifications.×¢²áÓÃÓÚ»ñÈ¡Ö¡½áÊøÍ¨ÖªµÄGPIF×´Ì¬»ú»Øµ÷¡£
-     * We use the fast callback version which is triggered from ISR context.ÎÒÃÇÊ¹ÓÃ´ÓISRÉÏÏÂÎÄ´¥·¢µÄ¿ìËÙ»Øµ÷°æ±¾¡£
+    /* Register the GPIF State Machine callback used to get frame end notifications.×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ú»ï¿½È¡Ö¡ï¿½ï¿½ï¿½ï¿½Í¨Öªï¿½ï¿½GPIF×´Ì¬ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½
+     * We use the fast callback version which is triggered from ISR context.ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã´ï¿½ISRï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Ù»Øµï¿½ï¿½æ±¾ï¿½ï¿½
      */
-    CyU3PGpifRegisterSMIntrCallback (CyFxGpifCB);//×´Ì¬»úµÄ´¥·¢ÖÐ¶Ï
+    CyU3PGpifRegisterSMIntrCallback (CyFxGpifCB);//×´Ì¬ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
 
 #ifdef BACKFLOW_DETECT
     back_flow_detected = 0;
@@ -787,8 +788,8 @@ CyFxUVCApplnInit (void)
 
     /* Image sensor initialization. Reset and then initialize with appropriate configuration. */
     CyU3PThreadSleep(100);
-    SensorReset ();
-    SensorInit ();
+    ov5640_reset();
+    ov5640_init();
 
     /* USB initialization. */
     apiRetStatus = CyU3PUsbStart ();
@@ -798,34 +799,34 @@ CyFxUVCApplnInit (void)
         CyFxAppErrorHandler (apiRetStatus);
     }
 
-    /* Setup the Callback to Handle the USB Setup Requests ÉèÖÃ»Øµ÷ÒÔ´¦ÀíUSBÉèÖÃÇëÇó*/
+    /* Setup the Callback to Handle the USB Setup Requests ï¿½ï¿½ï¿½Ã»Øµï¿½ï¿½Ô´ï¿½ï¿½ï¿½USBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
     CyU3PUsbRegisterSetupCallback (CyFxUVCApplnUSBSetupCB, CyFalse);
 
-    /* Setup the Callback to Handle the USB Events ÉèÖÃ»Øµ÷ÒÔ´¦ÀíUSBÊÂ¼þ*/
+    /* Setup the Callback to Handle the USB Events ï¿½ï¿½ï¿½Ã»Øµï¿½ï¿½Ô´ï¿½ï¿½ï¿½USBï¿½Â¼ï¿½*/
     CyU3PUsbRegisterEventCallback (CyFxUVCApplnUSBEventCB);
 
-    /* Register a callback to handle LPM requests from the USB 3.0 host. ×¢²áÒ»¸ö»Øµ÷À´´¦ÀíÀ´×Ôusb3.0Ö÷»úµÄLPMÇëÇó¡£*/
+    /* Register a callback to handle LPM requests from the USB 3.0 host. ×¢ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½usb3.0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½LPMï¿½ï¿½ï¿½ï¿½*/
     CyU3PUsbRegisterLPMRequestCallback (CyFxUVCAppLPMRqtCB);
 
-    /* Register the USB device descriptors with the driver. ÏòÇý¶¯³ÌÐò×¢²áUSBÉè±¸ÃèÊö·û¡£*/
+    /* Register the USB device descriptors with the driver. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½USBï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
     CyU3PUsbSetDesc (CY_U3P_USB_SET_HS_DEVICE_DESCR, 0, (uint8_t *)CyFxUSBDeviceDscr);
     CyU3PUsbSetDesc (CY_U3P_USB_SET_SS_DEVICE_DESCR, 0, (uint8_t *)CyFxUSBDeviceDscrSS);
 
-    /* BOS and Device qualifier descriptors. BOSºÍÉè±¸ÏÞ¶¨·ûÃèÊö·û¡£*/
+    /* BOS and Device qualifier descriptors. BOSï¿½ï¿½ï¿½è±¸ï¿½Þ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
     CyU3PUsbSetDesc (CY_U3P_USB_SET_DEVQUAL_DESCR, 0, (uint8_t *)CyFxUSBDeviceQualDscr);
     CyU3PUsbSetDesc (CY_U3P_USB_SET_SS_BOS_DESCR, 0, (uint8_t *)CyFxUSBBOSDscr);
 
-    /* Configuration descriptors. ÅäÖÃÃèÊö·û¡£*/
+    /* Configuration descriptors. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
     CyU3PUsbSetDesc (CY_U3P_USB_SET_HS_CONFIG_DESCR, 0, (uint8_t *)CyFxUSBHSConfigDscr);
     CyU3PUsbSetDesc (CY_U3P_USB_SET_FS_CONFIG_DESCR, 0, (uint8_t *)CyFxUSBFSConfigDscr);
     CyU3PUsbSetDesc (CY_U3P_USB_SET_SS_CONFIG_DESCR, 0, (uint8_t *)CyFxUSBSSConfigDscr);
 
-    /* String Descriptors ×Ö·û´®ÃèÊö·û*/
+    /* String Descriptors ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
     CyU3PUsbSetDesc (CY_U3P_USB_SET_STRING_DESCR, 0, (uint8_t *)CyFxUSBStringLangIDDscr);
     CyU3PUsbSetDesc (CY_U3P_USB_SET_STRING_DESCR, 1, (uint8_t *)CyFxUSBManufactureDscr);
     CyU3PUsbSetDesc (CY_U3P_USB_SET_STRING_DESCR, 2, (uint8_t *)CyFxUSBProductDscr);
 
-    /* Configure the video streaming endpoint. ÅäÖÃÊÓÆµÁ÷ÖÕ½áµã¡£*/
+    /* Configure the video streaming endpoint. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Õ½ï¿½ã¡£*/
     endPointConfig.enable   = 1;
     endPointConfig.epType   = CY_U3P_USB_EP_BULK;
     endPointConfig.pcktSize = CY_FX_EP_BULK_VIDEO_PKT_SIZE;
@@ -840,10 +841,10 @@ CyFxUVCApplnInit (void)
         CyFxAppErrorHandler (apiRetStatus);
     }
 
-    /* Configure the status interrupt endpoint.ÅäÖÃ×´Ì¬ÖÐ¶Ï¶Ëµã¡£
-       Note: This endpoint is not being used by the application as of now. This can be used in case ×¢Òâ£ºÓ¦ÓÃ³ÌÐòÄ¿Ç°ÉÐÎ´Ê¹ÓÃ´ËÖÕ½áµã¡£Õâ¿ÉÒÔÓÃÀ´ÒÔ·ÀÍòÒ»
-       UVC device needs to notify the host about any error conditions. A MANUAL_OUT DMA channel UVCÉè±¸ÐèÒªÍ¨ÖªÖ÷»úÈÎºÎ´íÎóÇé¿ö¡£Ò»¸öÊÖ¶¯Êä³öDMAÐÅµÀ
-       can be associated with this endpoint and used to send these data packets. ¿ÉÒÔÓë´ËÖÕ½áµã¹ØÁª²¢ÓÃÓÚ·¢ËÍÕâÐ©Êý¾Ý°ü¡£
+    /* Configure the status interrupt endpoint.ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½Ð¶Ï¶Ëµã¡£
+       Note: This endpoint is not being used by the application as of now. This can be used in case ×¢ï¿½â£ºÓ¦ï¿½Ã³ï¿½ï¿½ï¿½Ä¿Ç°ï¿½ï¿½Î´Ê¹ï¿½Ã´ï¿½ï¿½Õ½ï¿½ã¡£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½Ò»
+       UVC device needs to notify the host about any error conditions. A MANUAL_OUT DMA channel UVCï¿½è±¸ï¿½ï¿½ÒªÍ¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ÎºÎ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½DMAï¿½Åµï¿½
+       can be associated with this endpoint and used to send these data packets. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½
      */
     endPointConfig.enable   = 1;
     endPointConfig.epType   = CY_U3P_USB_EP_INTR;
@@ -969,7 +970,7 @@ CyFxUVCApplnInit (void)
   CyU3PTimerCreate(&UvcTimer, CyFxUvcAppProgressTimer, 0x00, glFrameTimerPeriod, 0, CYU3P_NO_ACTIVATE);
 #endif
 
-    /* Enable USB connection from the FX3 device, preferably at USB 3.0 speed. ´ÓFX3Éè±¸ÆôÓÃUSBÁ¬½Ó£¬×îºÃÊÇUSB 3.0ËÙ¶È¡£*/
+    /* Enable USB connection from the FX3 device, preferably at USB 3.0 speed. ï¿½ï¿½FX3ï¿½è±¸ï¿½ï¿½ï¿½ï¿½USBï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½USB 3.0ï¿½Ù¶È¡ï¿½*/
     apiRetStatus = CyU3PConnectState (CyTrue, CyTrue);
     if (apiRetStatus != CY_U3P_SUCCESS)
     {
@@ -1117,12 +1118,12 @@ UVCAppThread_Entry (
 
        The CY_FX_USB_SUSPEND_EVENT_HANDLER indicates that device must enter low power USB suspend mode.
        There is a provision for users to reset and/or turn OFF power to the sensor/Image signal processor (ISP).
-       	´Ó´«¸ÐÆ÷µ½USBÖ÷»úµÄÊµ¼ÊÊý¾Ý×ª·¢ÊÇÍ¨¹ýDMAºÍGPIF»Øµ÷Íê³ÉµÄ¹¦ÄÜ¡£Ïß³ÌÖ»¸ºÔð¼ì²éÁ÷µÄÆô¶¯/Í£Ö¹Ìõ¼þ¡£
-		CY_FX_UVC_STREAM_EVENTÊÂ¼þ±êÖ¾½«Ö¸Ê¾Ó¦Æô¶¯UVCÊÓÆµÁ÷¡£
-		CY_FX_UVC_STREAM_ABORT_EVENT±íÊ¾ÐèÒªÖÐÖ¹ÊÓÆµÁ÷¡£Õâ¸öÖ»ÓÐµ±ÎÒÃÇÊÕµ½Ò»¸öCLEAR_FEATUREÇëÇó£¬Ö¸Ê¾Á÷Ã½Ìå½«±»Í£Ö¹Ê±²Å»á·¢Éú£¬»òÕßÔÚÊý¾ÝÂ·¾¶ÖÐ³öÏÖÑÏÖØ´íÎóÊ±¡£
-		CY_FX_UVC_DMA_RESET_EVENT±íÊ¾ÐèÒªÖØÖÃDMAºÍÖÕ½áµã»º³åÇøÒÔ¼°½ûÓÃGPIF¡£ÎÒÃÇ´ÓµÚÒ»¸ö×´Ì¬ÖØÐÂÆô¶¯GPIF×´Ì¬»ú£¬Éè±¸½«¿ªÊ¼Á÷Ê½´«Êä½ÓÊÕµ½ÏÂÒ»Ö¡ºóµÄÊÓÆµ¡£¶ÔÓÚÏà»úÓ¦ÓÃ£¬Èç¹ûÎÒÃÇ¶ªÆúÒ»Ð©Ö¡²¢ÖØ²ÉÑùÊÓÆµÁ÷£¬Ó¦¸ÃÃ»ÎÊÌâ¡£Èç¹ûÎÒÃÇÍ»È»Í£Ö¹ÊÓÆµÁ÷£¬Õâ¿ÉÄÜÊÇÒ»¸öÔã¸âµÄÓÃ»§ÌåÑé¡£
-		Çë×¢Òâ£¬ÎÒÃÇ²»»áÔÚÌá½»»º³åÇøÊ§°ÜºóÖØÐÂÆô¶¯ÊÓÆµÁ÷£¬ÒòÎªÕâÊÇMAC OSËùÐèµÄ¡£
-		CY_FX_USB_SUSPEND_EVENT_HANDLERÖ¸Ê¾Éè±¸±ØÐë½øÈëµÍ¹¦ºÄUSB¹ÒÆðÄ£Ê½¡£ÓÃ»§¿ÉÒÔÖØÖÃºÍ/»ò¹Ø±Õ´«¸ÐÆ÷/Í¼ÏñÐÅºÅ´¦ÀíÆ÷£¨ISP£©µÄµçÔ´¡£
+       	ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½USBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½DMAï¿½ï¿½GPIFï¿½Øµï¿½ï¿½ï¿½ÉµÄ¹ï¿½ï¿½Ü¡ï¿½ï¿½ß³ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/Í£Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		CY_FX_UVC_STREAM_EVENTï¿½Â¼ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Ö¸Ê¾Ó¦ï¿½ï¿½ï¿½ï¿½UVCï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½
+		CY_FX_UVC_STREAM_ABORT_EVENTï¿½ï¿½Ê¾ï¿½ï¿½Òªï¿½ï¿½Ö¹ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½Ò»ï¿½ï¿½CLEAR_FEATUREï¿½ï¿½ï¿½ï¿½Ö¸Ê¾ï¿½ï¿½Ã½ï¿½å½«ï¿½ï¿½Í£Ö¹Ê±ï¿½Å»á·¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½Ð³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
+		CY_FX_UVC_DMA_RESET_EVENTï¿½ï¿½Ê¾ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½DMAï¿½ï¿½ï¿½Õ½ï¿½ã»ºï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½GPIFï¿½ï¿½ï¿½ï¿½ï¿½Ç´Óµï¿½Ò»ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GPIF×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½Ò»Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½Ò»Ð©Ö¡ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½Ã»ï¿½ï¿½ï¿½â¡£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»È»Í£Ö¹ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½é¡£
+		ï¿½ï¿½×¢ï¿½â£¬ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á½»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Üºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½MAC OSï¿½ï¿½ï¿½ï¿½Ä¡ï¿½
+		CY_FX_USB_SUSPEND_EVENT_HANDLERÖ¸Ê¾ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¹ï¿½ï¿½ï¿½USBï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãºï¿½/ï¿½ï¿½Ø±Õ´ï¿½ï¿½ï¿½ï¿½ï¿½/Í¼ï¿½ï¿½ï¿½ÅºÅ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ISPï¿½ï¿½ï¿½Äµï¿½Ô´ï¿½ï¿½
      */
     for (;;)
     {
@@ -1220,61 +1221,61 @@ static void
 UVCHandleProcessingUnitRqts (
         void)
 {
-    CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
-    uint16_t readCount, brightnessVal;
+    // CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
+    // uint16_t readCount, brightnessVal;
 
     switch (wValue)
     {
-        case CY_FX_UVC_PU_BRIGHTNESS_CONTROL:
-            switch (bRequest)
-            {
-                case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of brightness data = 2 byte. */
-                    glEp0Buffer[0] = 2;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_CUR_REQ: /* Current brightness value. */
-                    glEp0Buffer[0] = SensorGetBrightness ();
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum brightness = 0. */
-                    glEp0Buffer[0] = 0;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum brightness = 255. */
-                    glEp0Buffer[0] = 255;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
-                    glEp0Buffer[0] = 1;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
-                    glEp0Buffer[0] = 3;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_DEF_REQ: /* Default brightness value = 55. */
-                    glEp0Buffer[0] = 55;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_SET_CUR_REQ: /* Update brightness value. */
-                    apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
-                            glEp0Buffer, &readCount);
-                    if (apiRetStatus == CY_U3P_SUCCESS)
-                    {
-                        brightnessVal = CY_U3P_MAKEWORD(glEp0Buffer[1], glEp0Buffer[0]);
-                        /* Update the brightness value only if the value is within the range */
-                        if(brightnessVal >= 0 && brightnessVal <= 255)
-                        {
-                            SensorSetBrightness (glEp0Buffer[0]);
-                        }
-                    }
-                    break;
-                default:
-                    glUvcVcErrorCode = CY_FX_UVC_VC_ERROR_CODE_INVALID_REQUEST;
-                    CyU3PUsbStall (0, CyTrue, CyFalse);
-                    break;
-            }
-            break;
+        // case CY_FX_UVC_PU_BRIGHTNESS_CONTROL:
+        //     switch (bRequest)
+        //     {
+        //         case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of brightness data = 2 byte. */
+        //             glEp0Buffer[0] = 2;
+        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+        //             break;
+        //         case CY_FX_USB_UVC_GET_CUR_REQ: /* Current brightness value. */
+        //             glEp0Buffer[0] = SensorGetBrightness ();
+        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+        //             break;
+        //         case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum brightness = 0. */
+        //             glEp0Buffer[0] = 0;
+        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+        //             break;
+        //         case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum brightness = 255. */
+        //             glEp0Buffer[0] = 255;
+        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+        //             break;
+        //         case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
+        //             glEp0Buffer[0] = 1;
+        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+        //             break;
+        //         case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
+        //             glEp0Buffer[0] = 3;
+        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+        //             break;
+        //         case CY_FX_USB_UVC_GET_DEF_REQ: /* Default brightness value = 55. */
+        //             glEp0Buffer[0] = 55;
+        //             CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
+        //             break;
+        //         case CY_FX_USB_UVC_SET_CUR_REQ: /* Update brightness value. */
+        //             apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
+        //                     glEp0Buffer, &readCount);
+        //             if (apiRetStatus == CY_U3P_SUCCESS)
+        //             {
+        //                 brightnessVal = CY_U3P_MAKEWORD(glEp0Buffer[1], glEp0Buffer[0]);
+        //                 /* Update the brightness value only if the value is within the range */
+        //                 if(brightnessVal >= 0 && brightnessVal <= 255)
+        //                 {
+        //                     SensorSetBrightness (glEp0Buffer[0]);
+        //                 }
+        //             }
+        //             break;
+        //         default:
+        //             glUvcVcErrorCode = CY_FX_UVC_VC_ERROR_CODE_INVALID_REQUEST;
+        //             CyU3PUsbStall (0, CyTrue, CyFalse);
+        //             break;
+        //     }
+        //     break;
 
         default:
             /*
@@ -1301,6 +1302,12 @@ UVCHandleCameraTerminalRqts (
     int32_t  panVal, tiltVal;
     CyBool_t sendData = CyFalse;
 #endif
+    CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
+    uint16_t readCount;
+    CyBool_t sendData = CyFalse;
+    uint8_t autoExpMode;
+    uint32_t exposureAbs;
+    uint8_t data;
 
     switch (wValue)
     {
@@ -1423,7 +1430,112 @@ UVCHandleCameraTerminalRqts (
             }
             break;
 #endif
+        case CY_FX_UVC_CT_AE_MODE_CONTROL:
+            switch (bRequest) {
+                case CY_FX_USB_UVC_GET_INFO_REQ:
+                    glEp0Buffer[0] = 3;  /* GET/SET requests supported for this control */
+                    CyU3PUsbSendEP0Data(1, (uint8_t*)glEp0Buffer);
+                    break;
+                case CY_FX_USB_UVC_GET_CUR_REQ:
+                    data = ov5640_read_byte(AEC_PK_MANUAL);
+                    if (0x01 & data) {
+                        autoExpMode = 0x01;  // manual
+                    } else {
+                        autoExpMode = 0x02;  // auto
+                    }
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_GET_MIN_REQ:
+                    autoExpMode = AE_MODE_MIN;
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_GET_MAX_REQ:
+                    autoExpMode = AE_MODE_MAX;
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_GET_RES_REQ:
+                    autoExpMode = AE_MODE_RES;
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_GET_DEF_REQ:
+                    autoExpMode = AE_MODE_DEF;
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_SET_CUR_REQ:
+                    apiRetStatus = CyU3PUsbGetEP0Data(CY_FX_UVC_MAX_PROBE_SETTING, glEp0Buffer, &readCount);
+                    if (apiRetStatus == CY_U3P_SUCCESS) {
+                        if (glEp0Buffer[0] & 0x01) {
+                            data = ov5640_read_byte(AEC_PK_MANUAL);
+                            ov5640_write_byte(AEC_PK_MANUAL, data | 0x01);
+                        } else if (glEp0Buffer[0] & 0x02) {
+                            data = ov5640_read_byte(AEC_PK_MANUAL);
+                            ov5640_write_byte(AEC_PK_MANUAL, data & 0xfe);
+                        }
+                    }
+                    break;
+                default:
+                    glUvcVcErrorCode = CY_FX_UVC_VC_ERROR_CODE_INVALID_REQUEST;
+                    CyU3PUsbStall (0, CyTrue, CyFalse);
+                    break;
+            }
+            if (sendData) {
+                glEp0Buffer[0] = autoExpMode;
+                CyU3PUsbSendEP0Data(1, (uint8_t*)glEp0Buffer);
+            }
+            break;
+        case CY_FX_UVC_CT_EXPOSURE_TIME_ABSOLUTE_CONTROL:
+            switch (bRequest) {
+                case CY_FX_USB_UVC_GET_INFO_REQ:
+                    glEp0Buffer[0] = 3;  /* GET/SET requests supported for this control */
+                    CyU3PUsbSendEP0Data(1, (uint8_t*)glEp0Buffer);
+                    break;
+                case CY_FX_USB_UVC_GET_CUR_REQ:
+                    exposureAbs = 0;
+                    exposureAbs |= (ov5640_read_byte(AEC_PK_EXPOSURE0) & 0x0f);
+                    exposureAbs <<= 8;
+                    exposureAbs |= ov5640_read_byte(AEC_PK_EXPOSURE1);
+                    exposureAbs <<= 8;
+                    exposureAbs |= (ov5640_read_byte(AEC_PK_EXPOSURE2) & 0xf0);
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_GET_MIN_REQ:
+                    exposureAbs = EXP_ABS_MIN;
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_GET_MAX_REQ:
+                    exposureAbs = EXP_ABS_MAX;
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_GET_RES_REQ:
+                    exposureAbs = EXP_ABS_RES;
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_GET_DEF_REQ:
+                    exposureAbs = EXP_ABS_DEF;
+                    sendData = CyTrue;
+                    break;
+                case CY_FX_USB_UVC_SET_CUR_REQ:
+                     apiRetStatus = CyU3PUsbGetEP0Data(CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED, glEp0Buffer, &readCount);
+                    if (apiRetStatus == CY_U3P_SUCCESS) {
+                        ov5640_write_byte(AEC_PK_EXPOSURE2, glEp0Buffer[0] & 0xf0);
+                        ov5640_write_byte(AEC_PK_EXPOSURE1, glEp0Buffer[1]);
+                        ov5640_write_byte(AEC_PK_EXPOSURE0, glEp0Buffer[2] & 0xf0);
+                    }
+                    break;
+                default:
+                    glUvcVcErrorCode = CY_FX_UVC_VC_ERROR_CODE_INVALID_REQUEST;
+                    CyU3PUsbStall (0, CyTrue, CyFalse);
+                    break;
 
+            }
+            if (sendData) {
+                glEp0Buffer[0] = CY_U3P_DWORD_GET_BYTE0(exposureAbs);
+                glEp0Buffer[1] = CY_U3P_DWORD_GET_BYTE1(exposureAbs);
+                glEp0Buffer[2] = CY_U3P_DWORD_GET_BYTE2(exposureAbs);
+                glEp0Buffer[3] = CY_U3P_DWORD_GET_BYTE3(exposureAbs);
+                CyU3PUsbSendEP0Data(wLength, (uint8_t*)glEp0Buffer);
+            }
+            break;
         default:
             glUvcVcErrorCode = CY_FX_UVC_VC_ERROR_CODE_INVALID_CONTROL;
             CyU3PUsbStall (0, CyTrue, CyFalse);
@@ -1628,7 +1740,7 @@ UVCHandleVideoStreamingRqts (
                     {
                         if (usbSpeed == CY_U3P_SUPER_SPEED)
                         {
-                            SensorScaling_HD720p_30fps ();
+                            // SensorScaling_HD720p_30fps ();
 #ifdef FRAME_TIMER_ENABLE
                             /* We are using frame timer value of 200ms as the frame time is 33ms.
                              * Having more margin so that DMA reset doen't happen every now and then */
@@ -1637,7 +1749,7 @@ UVCHandleVideoStreamingRqts (
                         }
                         else
                         {
-                            SensorScaling_VGA ();
+                            // SensorScaling_VGA ();
 #ifdef FRAME_TIMER_ENABLE
                             /* We are using frame timer value of 400ms as the frame time is 66ms.
                              * Having more margin so that DMA reset doen't happen every now and then */
@@ -1685,7 +1797,7 @@ UVCAppEP0Thread_Entry (
 
     for (;;)
     {
-        /* Wait for a Video control or streaming related request on the control endpoint. µÈ´ý¿ØÖÆ¶ËµãÉÏµÄÊÓÆµ¿ØÖÆ»òÁ÷Ã½ÌåÏà¹ØÇëÇó¡£*/
+        /* Wait for a Video control or streaming related request on the control endpoint. ï¿½È´ï¿½ï¿½ï¿½ï¿½Æ¶Ëµï¿½ï¿½Ïµï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Æ»ï¿½ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
         if (CyU3PEventGet (&glFxUVCEvent, eventMask, CYU3P_EVENT_OR_CLEAR, &eventFlag, CYU3P_WAIT_FOREVER) == CY_U3P_SUCCESS)
         {
             usbSpeed = CyU3PUsbGetSpeed ();

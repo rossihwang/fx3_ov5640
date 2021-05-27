@@ -25,8 +25,9 @@ MODULE = fx3_ov5640
 SOURCE= uvc.c 			\
 	camera_ptzcontrol.c	\
 	cyfxuvcdscr.c		\
-	sensor.c		\
-	cyfxtx.c
+	sensor.c		    \
+	cyfxtx.c			\
+	ov5640_sensor.c
 
 ifeq ($(CYFXBUILD),arm)
 SOURCE_ASM=cyfx_startup.S
