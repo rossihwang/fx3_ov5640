@@ -6,5 +6,5 @@ if [[ $1 == "i2c" ]]
 then
     ${ELF2IMG} -i $2 -o $3 -i2cconf 0x1c -vectorload yes
 else
-    ${ELF2IMG} -i $2 -o $3 -i2cconf 0x00 -vectorload yes
+    ${ELF2IMG} -i $1 -o $2 -i2cconf 0x00 -vectorload yes
 fi
