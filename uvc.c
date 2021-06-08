@@ -1456,7 +1456,7 @@ UVCHandleCameraTerminalRqts (
                 case CY_FX_USB_UVC_SET_CUR_REQ:
                     apiRetStatus = CyU3PUsbGetEP0Data(CY_FX_UVC_MAX_PROBE_SETTING, glEp0Buffer, &readCount);
                     if (apiRetStatus == CY_U3P_SUCCESS) {
-                        if (glEp0Buffer[0] & 0x03) {  // manual mode(exposure/gain)
+                        if (glEp0Buffer[0] & 0x01) {  // manual mode(exposure/gain)
                             data = ov5640_read_byte(AEC_PK_MANUAL);
                             ov5640_write_byte(AEC_PK_MANUAL, data | 0x01);
                         } else if (glEp0Buffer[0] & 0x02) {  // auto mode(exposure/gain)
